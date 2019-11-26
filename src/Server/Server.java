@@ -54,7 +54,7 @@ public class Server {
 	public static JSONObject getData(String mssv) {
 		try {
 			final WebClient webClient = new WebClient();
-			// Vào trang Xem điểm thi
+			// Vào trang xem điểm thi
 	        HtmlPage page1 = webClient.getPage("http://thongtindaotao.sgu.edu.vn/default.aspx?page=nhapmasv&flag=XemDiemThi");
 	        // Tìm đến Form có tên aspnetFrom và tìm đến textInput, btn
 	        HtmlForm form = page1.getFormByName("aspnetForm");
@@ -112,8 +112,8 @@ public class Server {
 	        		DomNodeList<HtmlElement> tmp = row.getElementsByTagName("span");
 	        		switch (row.getElementsByTagName("span").get(0).asText()){
 	        			case "Điểm trung bình tích lũy:": tb10 = tmp.get(1).asText(); break;
-	        			case "Ä�iá»ƒm trung bÃ¬nh tÃ­ch lÅ©y (há»‡ 4):": tb4 = tmp.get(1).asText(); break;
-	        			case "Sá»‘ tÃ­n chá»‰ tÃ­ch lÅ©y:": tc = tmp.get(1).asText(); break;
+	        			case "Điểm trung bình tích lũy (hệ 4):": tb4 = tmp.get(1).asText(); break;
+	        			case "Số tín chỉ tích lũy:": tc = tmp.get(1).asText(); break;
 	        		}
 	        		break;
 	        	}
@@ -122,7 +122,11 @@ public class Server {
 	        data.put("tb4", tb4);
 	        data.put("tc", tc);
 	        data.put("sl", Integer.toString(dsmh.size()));
-	        return data;
+	        
+	        JSONObject response = new JSONObject();
+	        response.put("data", data.toString());
+	        response.put("success", true);
+	        return response;
 		} catch (Exception e) {
 			JSONObject data = new JSONObject();
 			data.put("success", false);
@@ -153,10 +157,12 @@ public class Server {
 
 	            // Tiến hành lấy dữ liệu từ trang web và trả về kết quả
 	            String result = getData(data).toString();
+	            System.out.println(result);
 	            // Mã hóa dữ liệu
 	            result = AES.encrypt(result, key);
 	            System.out.println(result);
-	            out = result.toString().getBytes();
+	            // Tiến hành chuyển dữ liệu sang kiểu byte và chuyển về lại client
+	            out = result.getBytes();
 	            DatagramPacket sendPacket = new DatagramPacket(out, out.length, ip, port);
 	            socket.send(sendPacket);
 	            System.out.println("=========================");

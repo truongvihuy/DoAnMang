@@ -1,5 +1,8 @@
 package Server;
 import java.util.List;
+
+import javax.swing.JOptionPane;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,6 +12,8 @@ import java.util.ArrayList;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
@@ -52,15 +57,16 @@ public class Server {
 		receivePacket = new DatagramPacket(inp, inp.length);
 	}
 	public static JSONObject getData(String mssv) {
-		try {
-			final WebClient webClient = new WebClient();
+		java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(java.util.logging.Level.OFF);
+		try (final WebClient webClient = new WebClient(BrowserVersion.CHROME)) {
 			// Vào trang xem điểm thi
 	        HtmlPage page1 = webClient.getPage("http://thongtindaotao.sgu.edu.vn/default.aspx?page=nhapmasv&flag=XemDiemThi");
+	        
 	        // Tìm đến Form có tên aspnetFrom và tìm đến textInput, btn
 	        HtmlForm form = page1.getFormByName("aspnetForm");
 	        HtmlSubmitInput button = form.getInputByName("ctl00$ContentPlaceHolder1$ctl00$btnOK");
 	        HtmlTextInput textField = form.getInputByName("ctl00$ContentPlaceHolder1$ctl00$txtMaSV");
-
+	        System.out.println(button.asText());
 	        // Điền mssv vào text Input
 	        textField.type(mssv);
 
@@ -72,7 +78,7 @@ public class Server {
 	        HtmlPage page3 = htmlAnchor.click();
 	        
 	        JSONObject data = new JSONObject();
-	        // Get info student
+	        // Lấy thông tin sinh viên
 	        data.put("mssv", mssv);
 	        data.put("hoTen", page3.getElementById(hoten).asText());
 	        data.put("phai", page3.getElementById(phai).asText());
@@ -86,29 +92,55 @@ public class Server {
 	        data.put("khoaHoc", page3.getElementById(khoahoc).asText());
 	        data.put("coVan", page3.getElementById(covan).asText());
 	        
-	        // 
+	        // Lấy phần khung bảng điểm
+	        int demMonhocMoiTrongHocKi = 0;
 	        DomNodeList<HtmlElement> diem = page3.getElementById("ctl00_ContentPlaceHolder1_ctl00_div1").getElementsByTagName("tr");
 	        String tb10 = "";
 	        String tb4 = "";
 	        String tc = "";
 	        List<String> dsmh = new ArrayList<String>();
+	        JSONArray danhSachHocKi = new JSONArray();
+	        JSONObject hocki = null;
+	        JSONArray monHocHocKi = new JSONArray();
 	        for (HtmlElement row : diem) {
 	        	switch(row.getAttribute("class")){
 	        	case "title-diem": break;
-	        	case "title-hk-diem": break;
+	        	case "title-hk-diem": 
+	        		demMonhocMoiTrongHocKi = 0;
+	        		hocki = new JSONObject();
+	        		hocki.put("hocki", row.asText());
+	        		break;
 	        	case "row-diem": 
-	        		String maMonHoc = row.getElementsByTagName("td").get(1).asText();
-	        		if(maMonHoc.equals("KSTA60")) break; 
+	        		DomNodeList<HtmlElement> monHoc = row.getElementsByTagName("td");
+	        		if(monHoc.get(1).asText().equals("KSTA60")) break; 
+	        		JSONObject tmpMonHoc = new JSONObject();
+	        		tmpMonHoc.put("maMon", monHoc.get(1).asText());
+	        		tmpMonHoc.put("tenMon", monHoc.get(2).asText());
+	        		tmpMonHoc.put("kiemTra", monHoc.get(6).asText());
+	        		tmpMonHoc.put("thi", monHoc.get(7).asText());
+	        		tmpMonHoc.put("tongKet10", monHoc.get(8).asText());
+	        		tmpMonHoc.put("tongKet4", monHoc.get(9).asText());
+	        		tmpMonHoc.put("ketQua", monHoc.get(10).asText());
+	        		monHocHocKi.add(tmpMonHoc);
+	        		// Đếm môn học
 	        		boolean flag = true;
 	        		for(String mh : dsmh) {
-	        			if(mh.equals(maMonHoc)) {
+	        			if(mh.equals(monHoc.get(1).asText())) {
 	        				flag = false;
 	        				break;
 	        			}
 	        		}
-	        		if(flag) dsmh.add(maMonHoc);
+	        		if(flag) {
+	        			dsmh.add(monHoc.get(1).asText());
+	        			demMonhocMoiTrongHocKi++;
+	        		}
 	        		break;
 	        	case "row-diemTK": 
+	        		if(hocki != null) {
+	        			hocki.put("monHoc", monHocHocKi.toString());
+	        			danhSachHocKi.add(hocki);
+	        			hocki = null;
+	        		}
 	        		DomNodeList<HtmlElement> tmp = row.getElementsByTagName("span");
 	        		switch (row.getElementsByTagName("span").get(0).asText()){
 	        			case "Điểm trung bình tích lũy:": tb10 = tmp.get(1).asText(); break;
@@ -121,16 +153,22 @@ public class Server {
 	        data.put("tb10", tb10);
 	        data.put("tb4", tb4);
 	        data.put("tc", tc);
-	        data.put("sl", Integer.toString(dsmh.size()));
+	        data.put("sl", Integer.toString(dsmh.size() - demMonhocMoiTrongHocKi));
+	        data.put("hocki", danhSachHocKi.toString());
 	        
 	        JSONObject response = new JSONObject();
 	        response.put("data", data.toString());
 	        response.put("success", true);
 	        return response;
+		} catch (ElementNotFoundException e) {
+			JSONObject data = new JSONObject();
+			data.put("success", false);
+			data.put("error", "Hiện tại không thể tra cứu. Hãy thử lại sau!!!");
+			return data;
 		} catch (Exception e) {
 			JSONObject data = new JSONObject();
 			data.put("success", false);
-			System.out.println(data);
+			data.put("error", e.getMessage());
 			return data;
 		}
 	}

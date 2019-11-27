@@ -101,60 +101,62 @@ public class Server {
 	        List<String> dsmh = new ArrayList<String>();
 	        JSONArray danhSachHocKi = new JSONArray();
 	        JSONObject hocki = null;
-	        JSONArray monHocHocKi = new JSONArray();
+	        JSONArray monHocHocKi = null;
 	        for (HtmlElement row : diem) {
 	        	switch(row.getAttribute("class")){
-	        	case "title-diem": break;
-	        	case "title-hk-diem": 
-	        		demMonhocMoiTrongHocKi = 0;
-	        		hocki = new JSONObject();
-	        		hocki.put("hocki", row.asText());
-	        		break;
-	        	case "row-diem": 
-	        		DomNodeList<HtmlElement> monHoc = row.getElementsByTagName("td");
-	        		if(monHoc.get(1).asText().equals("KSTA60")) break; 
-	        		JSONObject tmpMonHoc = new JSONObject();
-	        		tmpMonHoc.put("maMon", monHoc.get(1).asText());
-	        		tmpMonHoc.put("tenMon", monHoc.get(2).asText());
-	        		tmpMonHoc.put("kiemTra", monHoc.get(6).asText());
-	        		tmpMonHoc.put("thi", monHoc.get(7).asText());
-	        		tmpMonHoc.put("tongKet10", monHoc.get(8).asText());
-	        		tmpMonHoc.put("tongKet4", monHoc.get(9).asText());
-	        		tmpMonHoc.put("ketQua", monHoc.get(10).asText());
-	        		monHocHocKi.add(tmpMonHoc);
-	        		// Đếm môn học
-	        		boolean flag = true;
-	        		for(String mh : dsmh) {
-	        			if(mh.equals(monHoc.get(1).asText())) {
-	        				flag = false;
-	        				break;
-	        			}
-	        		}
-	        		if(flag) {
-	        			dsmh.add(monHoc.get(1).asText());
-	        			demMonhocMoiTrongHocKi++;
-	        		}
-	        		break;
-	        	case "row-diemTK": 
-	        		if(hocki != null) {
-	        			hocki.put("monHoc", monHocHocKi.toString());
-	        			danhSachHocKi.add(hocki);
-	        			hocki = null;
-	        		}
-	        		DomNodeList<HtmlElement> tmp = row.getElementsByTagName("span");
-	        		switch (row.getElementsByTagName("span").get(0).asText()){
-	        			case "Điểm trung bình tích lũy:": tb10 = tmp.get(1).asText(); break;
-	        			case "Điểm trung bình tích lũy (hệ 4):": tb4 = tmp.get(1).asText(); break;
-	        			case "Số tín chỉ tích lũy:": tc = tmp.get(1).asText(); break;
-	        		}
-	        		break;
+	        		case "title-diem": break;
+		        	case "title-hk-diem": 
+		        		demMonhocMoiTrongHocKi = 0;
+		        		hocki = new JSONObject();
+		        		monHocHocKi = new JSONArray();
+		        		hocki.put("hocKi", row.asText());
+		        		break;
+		        	case "row-diem": 
+		        		DomNodeList<HtmlElement> monHoc = row.getElementsByTagName("td");
+		        		if(monHoc.get(1).asText().equals("KSTA60")) break; 
+		        		JSONObject tmpMonHoc = new JSONObject();
+		        		tmpMonHoc.put("maMon", monHoc.get(1).asText());
+		        		tmpMonHoc.put("tenMon", monHoc.get(2).asText());
+		        		tmpMonHoc.put("kiemTra", monHoc.get(6).asText());
+		        		tmpMonHoc.put("thi", monHoc.get(7).asText());
+		        		tmpMonHoc.put("tongKet10", monHoc.get(8).asText());
+		        		tmpMonHoc.put("tongKet4", monHoc.get(9).asText());
+		        		tmpMonHoc.put("ketQua", monHoc.get(10).asText());
+		        		monHocHocKi.add(tmpMonHoc);
+		        		// Đếm môn học
+		        		boolean flag = true;
+		        		for(String mh : dsmh) {
+		        			if(mh.equals(monHoc.get(1).asText())) {
+		        				flag = false;
+		        				break;
+		        			}
+		        		}
+		        		if(flag) {
+		        			dsmh.add(monHoc.get(1).asText());
+		        			demMonhocMoiTrongHocKi++;
+		        		}
+		        		break;
+		        	case "row-diemTK": 
+		        		if(hocki != null) {
+		        			hocki.put("monHoc", monHocHocKi);
+		        			danhSachHocKi.add(hocki);
+		        			hocki = null;
+		        			monHocHocKi = null;
+		        		}
+		        		DomNodeList<HtmlElement> tmp = row.getElementsByTagName("span");
+		        		switch (row.getElementsByTagName("span").get(0).asText()){
+		        			case "Điểm trung bình tích lũy:": tb10 = tmp.get(1).asText(); break;
+		        			case "Điểm trung bình tích lũy (hệ 4):": tb4 = tmp.get(1).asText(); break;
+		        			case "Số tín chỉ tích lũy:": tc = tmp.get(1).asText(); break;
+		        		}
+		        		break;
 	        	}
 	        }
 	        data.put("tb10", tb10);
 	        data.put("tb4", tb4);
 	        data.put("tc", tc);
 	        data.put("sl", Integer.toString(dsmh.size() - demMonhocMoiTrongHocKi));
-	        data.put("hocki", danhSachHocKi.toString());
+	        data.put("danhSachHocKi", danhSachHocKi);
 	        
 	        JSONObject response = new JSONObject();
 	        response.put("data", data.toString());
@@ -195,10 +197,8 @@ public class Server {
 
 	            // Tiến hành lấy dữ liệu từ trang web và trả về kết quả
 	            String result = getData(data).toString();
-	            System.out.println(result);
 	            // Mã hóa dữ liệu
 	            result = AES.encrypt(result, key);
-	            System.out.println(result);
 	            // Tiến hành chuyển dữ liệu sang kiểu byte và chuyển về lại client
 	            out = result.getBytes();
 	            DatagramPacket sendPacket = new DatagramPacket(out, out.length, ip, port);

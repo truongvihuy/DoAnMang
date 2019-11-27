@@ -85,7 +85,7 @@ public class Client {
 			try {
 				Client cli = new Client();
 				JSONObject data = cli.sendMSSV(out);
-				System.out.println("=========");
+				System.out.println("===================================================");
 				System.out.println("Họ và tên:\t" + data.get("hoTen"));
 				System.out.println("Mã sv:\t\t" + data.get("mssv"));
 				System.out.println("Phái:\t\t" + data.get("phai"));
@@ -98,12 +98,24 @@ public class Client {
 				System.out.println("Hệ đào tạo:\t" + data.get("heDaoTao"));
 				System.out.println("Khóa hợc:\t" + data.get("khoaHoc"));
 				System.out.println("Cố vấn:\t\t" + data.get("coVan"));
-				System.out.println("=========");
-					// System.out.println("Ã„ï¿½iÃ¡Â»Æ’m trung bÃƒÂ¬nh hÃ¡Â»â€¡ 10:\t" + data.get("tb10"));
-					// System.out.println("Ã„ï¿½iÃ¡Â»Æ’m trung bÃƒÂ¬nh hÃ¡Â»â€¡ 4:\t" + data.get("tb4"));
-					// System.out.println("SÃ¡Â»â€˜ tÃƒÂ­nh chÃ¡Â»â€°:\t" + data.get("tc"));
-					// System.out.println("SÃ¡Â»â€˜ lÃ†Â°Ã¡Â»Â£ng mÃƒÂ´n hÃ¡Â»ï¿½c:\t" + data.get("sl"));
-					// System.out.println("=========================================");
+				System.out.println("\t"+"============================");
+				JSONArray danhSachHocKi = (JSONArray) data.get("danhSachHocKi");
+				for (int i = 0; i < danhSachHocKi.size(); i++) {
+					JSONObject hocKi = (JSONObject) danhSachHocKi.get(i);
+					System.out.println("\t" + hocKi.get("hocKi"));
+					JSONArray danhSachMonHoc = (JSONArray) hocKi.get("monHoc");
+					for(int j = 0; j < danhSachMonHoc.size(); j++) {
+						JSONObject monHoc = (JSONObject) danhSachMonHoc.get(j);
+						System.out.println(monHoc.get("tenMon"));
+						System.out.println("\tKiểm tra: " + monHoc.get("kiemTra") + "\t\tThi: "  + (monHoc.get("thi").toString().length() > 1 ? monHoc.get("thi") : "   ")+ "\tTổng kết(10): " + monHoc.get("tongKet10") + "\tTổng kết(4): " + monHoc.get("tongKet4") + "\t\tKết quả: " + monHoc.get("ketQua") + "\n");
+					}
+					System.out.println("\t"+"============================");
+				}
+				System.out.println("Điểm trung bình tích lũy hệ 10:\t" + data.get("tb10"));
+				System.out.println("Điểm trung bình tích lũy hệ 4:\t" + data.get("tb4"));
+				System.out.println("Tính chỉ tích lũy:\t\t" + data.get("tc"));
+				System.out.println("Số lượng môn học:\t\t" + data.get("sl"));
+				System.out.println("===================================================");
 			} catch (SocketTimeoutException e) {
 				System.out.println("Dữ liệu phản hồi khá lâu!!!");
 			} catch (Exception e) {

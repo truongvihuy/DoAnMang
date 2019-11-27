@@ -47,7 +47,6 @@ public class Client {
 		request.put("data", data);
 		request.put("public_key", Base64.getEncoder().encodeToString(RSA_Key.publicKey.getEncoded()));
 		request.put("secret_key", secretKeyEncrypted);
-		System.out.println(request);
 		this.outData = request.toString().getBytes();
             
 		// Gửi UDP đến Server
@@ -56,7 +55,6 @@ public class Client {
 		DatagramPacket sendPkt = new DatagramPacket(this.outData, this.outData.length, IP, this.port);
 		socket.send(sendPkt);
 		socket.setSoTimeout(this.timeout);
-            
             
 		// Chờ nhận dữ liệu từ Server
 		DatagramPacket recievePkt = new DatagramPacket(this.inData, this.inData.length);
@@ -69,7 +67,6 @@ public class Client {
 		JSONObject response = (JSONObject) parser.parse(res);
 		if(response.get("success").toString().equals("true")) {
 			JSONObject result = (JSONObject) parser.parse(response.get("data").toString());
-			System.out.println(result);
 			return result;			
 		} else {
 			throw new Exception(response.get("error").toString());
@@ -106,7 +103,7 @@ public class Client {
 					JSONArray danhSachMonHoc = (JSONArray) hocKi.get("monHoc");
 					for(int j = 0; j < danhSachMonHoc.size(); j++) {
 						JSONObject monHoc = (JSONObject) danhSachMonHoc.get(j);
-						System.out.println(monHoc.get("tenMon"));
+						System.out.println(monHoc.get("tenMon") + " (" + monHoc.get("maMon") + ")");
 						System.out.println("\tKiểm tra: " + monHoc.get("kiemTra") + "\t\tThi: "  + (monHoc.get("thi").toString().length() > 1 ? monHoc.get("thi") : "   ")+ "\tTổng kết(10): " + monHoc.get("tongKet10") + "\tTổng kết(4): " + monHoc.get("tongKet4") + "\t\tKết quả: " + monHoc.get("ketQua") + "\n");
 					}
 					System.out.println("\t"+"============================");
@@ -115,12 +112,12 @@ public class Client {
 				System.out.println("Điểm trung bình tích lũy hệ 4:\t" + data.get("tb4"));
 				System.out.println("Tính chỉ tích lũy:\t\t" + data.get("tc"));
 				System.out.println("Số lượng môn học:\t\t" + data.get("sl"));
-				System.out.println("===================================================");
 			} catch (SocketTimeoutException e) {
 				System.out.println("Dữ liệu phản hồi khá lâu!!!");
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 			}
+			System.out.println("===================================================");
 		}
 	}
 }

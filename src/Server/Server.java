@@ -1,5 +1,6 @@
 package Server;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
@@ -59,6 +60,8 @@ public class Server {
 	public static JSONObject getData(String mssv) {
 		java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(java.util.logging.Level.OFF);
 		try (final WebClient webClient = new WebClient(BrowserVersion.CHROME)) {
+			Pattern patt = Pattern.compile("^[123]1\\d{8}$");
+			if(!patt.matcher(mssv).matches()) throw new Exception("Mã sinh viên không hợp lệ!!!");
 			// Vào trang xem điểm thi
 	        HtmlPage page1 = webClient.getPage("http://thongtindaotao.sgu.edu.vn/default.aspx?page=nhapmasv&flag=XemDiemThi");
 	        
@@ -165,10 +168,16 @@ public class Server {
 		} catch (ElementNotFoundException e) {
 			JSONObject data = new JSONObject();
 			data.put("success", false);
-			data.put("error", "Hiện tại không thể tra cứu. Hãy thử lại sau!!!");
+			data.put("error", "Không tìm thấy mã vừa nhập!!!");
+			return data;
+		}catch (NullPointerException e) {
+			JSONObject data = new JSONObject();
+			data.put("success", false);
+			data.put("error", "Không tìm thấy thông tin!!!");
 			return data;
 		} catch (Exception e) {
 			JSONObject data = new JSONObject();
+			System.out.println(e);
 			data.put("success", false);
 			data.put("error", e.getMessage());
 			return data;
@@ -194,9 +203,9 @@ public class Server {
 				key = RSA.decrypt(key);
 	            data = AES.decrypt(request.get("data").toString(), key);
 	            
-
+	            String result;
 	            // Tiến hành lấy dữ liệu từ trang web và trả về kết quả
-	            String result = getData(data).toString();
+	            result = getData(data).toString();
 	            // Mã hóa dữ liệu
 	            result = AES.encrypt(result, key);
 	            // Tiến hành chuyển dữ liệu sang kiểu byte và chuyển về lại client

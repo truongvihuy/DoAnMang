@@ -27,18 +27,20 @@ public class RSA {
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 		return kf.generatePublic(spec);
 	}
+	
 	public static String encrypt(String str) throws Exception{
-            PublicKey publicKey = getPublicKey();
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            byte[] byteEncrypted = cipher.doFinal(str.getBytes());
-            return  Base64.getEncoder().encodeToString(byteEncrypted);
-        }
-        public static String decrypt(String str) throws Exception{
-            PrivateKey privateKey = getPrivateKey();
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] byteDecrypted = cipher.doFinal(Base64.getDecoder().decode(str));
-            return new String(byteDecrypted);
-        }
+		PublicKey publicKey = getPublicKey();
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+		byte[] byteEncrypted = cipher.doFinal(str.getBytes());
+		return  Base64.getEncoder().encodeToString(byteEncrypted);
+	}
+	
+    public static String decrypt(String str) throws Exception{
+    	PrivateKey privateKey = getPrivateKey();
+    	Cipher cipher = Cipher.getInstance("RSA");
+    	cipher.init(Cipher.DECRYPT_MODE, privateKey);
+    	byte[] byteDecrypted = cipher.doFinal(Base64.getDecoder().decode(str));
+    	return new String(byteDecrypted);
+    }
 }

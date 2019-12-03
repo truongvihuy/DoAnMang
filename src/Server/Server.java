@@ -1,9 +1,7 @@
 package Server;
+
 import java.util.List;
 import java.util.regex.Pattern;
-
-import javax.swing.JOptionPane;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -109,6 +107,12 @@ public class Server {
 	        	switch(row.getAttribute("class")){
 	        		case "title-diem": break;
 		        	case "title-hk-diem": 
+		        		if(hocki != null) {
+		        			hocki.put("monHoc", monHocHocKi);
+		        			danhSachHocKi.add(hocki);
+		        			hocki = null;
+		        			monHocHocKi = null;
+		        		}
 		        		demMonhocMoiTrongHocKi = 0;
 		        		hocki = new JSONObject();
 		        		monHocHocKi = new JSONArray();
